@@ -13,7 +13,7 @@ func main() {
 
 	signalChan := make(chan os.Signal, 1)
 
-	signal.Notify(signalChan,
+	signals := []os.Signal{
 		os.Interrupt,
 		syscall.SIGTERM,
 		syscall.SIGHUP,
@@ -27,15 +27,35 @@ func main() {
 		syscall.SIGILL,
 		syscall.SIGPIPE,
 		syscall.SIGTRAP,
-	)
+	}
+
+	signal.Notify(signalChan, signals...)
 
 	receivedSignal := <-signalChan
 
 	fmt.Printf("received signal: %v\n", receivedSignal)
 
-	fmt.Println("sleeping for 3 seconds")
+	fmt.Println("starting to count every second")
 
-	time.Sleep(3 * time.Second)
+	go func() {
+		count := 0
+
+		fmt.Println("0")
+
+		for {
+			time.Sleep(1 * time.Second)
+			count++
+			fmt.Println(count)
+		}
+	}()
+
+	signalChan = make(chan os.Signal, 1)
+
+	signal.Notify(signalChan, signals...)
+
+	receivedSignal = <-signalChan
+
+	fmt.Printf("received second signal: %v\n", receivedSignal)
 
 	fmt.Println("exiting")
 
